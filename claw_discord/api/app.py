@@ -32,24 +32,38 @@ _DISCORD_ERROR_CODES = {
     400: 50035,   # Invalid Form Body
     401: 40001,   # Unauthorized
     403: 50013,   # Missing Permissions
-    404: 10003,   # Unknown resource (generic)
+    404: 10003,   # Unknown resource (generic fallback)
     409: 40002,   # Already exists
     429: 40060,   # Rate limited
     500: 0,       # General error
+}
+
+# Resource-specific 404 error codes (matches real Discord API)
+_UNKNOWN_RESOURCE_CODES = {
+    "Unknown Channel": 10003,
+    "Unknown Guild": 10004,
+    "Unknown Message": 10008,
+    "Unknown User": 10013,
+    "Unknown Emoji": 10014,
+    "Unknown Webhook": 10015,
+    "Unknown Ban": 10026,
+    "Unknown Role": 10011,
+    "Unknown Member": 10013,
+    "Unknown Invite": 10006,
 }
 
 
 @app.exception_handler(HTTPException)
 async def discord_error_handler(request: Request, exc: HTTPException):
     """Return errors in Discord API style."""
-    code = _DISCORD_ERROR_CODES.get(exc.status_code, 0)
     message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+    # Use resource-specific code for 404s, generic mapping for others
+    code = _UNKNOWN_RESOURCE_CODES.get(message, _DISCORD_ERROR_CODES.get(exc.status_code, 0))
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "code": code,
             "message": message,
-            "errors": {},
         },
     )
 

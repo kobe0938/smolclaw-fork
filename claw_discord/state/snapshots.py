@@ -290,6 +290,8 @@ def _restore_from_state(state: dict):
                     mentionable=r.get("mentionable", False),
                 ))
 
+            db.flush()  # Roles must exist before members reference them
+
             for m in guild_data.get("members", []):
                 db.add(GuildMember(
                     user_id=m["userId"],

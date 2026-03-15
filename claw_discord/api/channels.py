@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import secrets
 from datetime import datetime, timezone
 
@@ -21,7 +20,6 @@ from .schemas import (
     ModifyChannelRequest,
     PermissionOverwriteObject,
     ThreadMemberObject,
-    UserObject,
 )
 
 router = APIRouter()
@@ -287,6 +285,12 @@ def create_thread_from_message(
     bot_user: User = Depends(resolve_bot_user),
 ):
     channel = _get_channel_or_404(db, channel_id)
+    from claw_discord.models import Message
+    msg = db.query(Message).filter(
+        Message.id == message_id, Message.channel_id == channel_id
+    ).first()
+    if not msg:
+        raise HTTPException(404, "Unknown Message")
     thread_id = generate_snowflake()
     thread = Channel(
         id=thread_id,

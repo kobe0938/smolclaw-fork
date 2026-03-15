@@ -128,8 +128,9 @@ class TestErrorFormat:
         data = resp.json()
         assert "code" in data
         assert "message" in data
-        assert "errors" in data
         assert isinstance(data["code"], int)
+        # Real Discord simple errors have no "errors" key
+        assert "errors" not in data
 
     def test_400_returns_discord_format(self, client):
         guild_id = _get_guild_id(client)
